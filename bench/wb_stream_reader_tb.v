@@ -39,10 +39,10 @@ module wb_streamer_tb;
    wire 	    fifo_wr;
    wire 	    fifo_full;
    
-   wb_stream_writer
+   wb_stream_reader
      #(.FIFO_AW (FIFO_AW),
        .MAX_BURST_LEN (MAX_BURST_LEN))
-   wb_stream_writer0
+   wb_stream_reader0
      (.clk       (clk),
       .rst       (rst),
       //Stream data output
@@ -102,9 +102,9 @@ module wb_streamer_tb;
       start_adr = 0;
       
       //FIXME: Implement wb slave config IF
-      wb_stream_writer0.wb_stream_cfg0.buf_size = BUF_SIZE;
-      wb_stream_writer0.wb_stream_cfg0.burst_size = BURST_SIZE;
-      wb_stream_writer0.wb_stream_cfg0.start_adr = start_adr;
+      wb_stream_reader0.wb_stream_cfg0.buf_size = BUF_SIZE;
+      wb_stream_reader0.wb_stream_cfg0.burst_size = BURST_SIZE;
+      wb_stream_reader0.wb_stream_cfg0.start_adr = start_adr;
       
       fifo_writer0.rate = 0.1;
       

@@ -1,4 +1,4 @@
-module wb_stream_writer
+module wb_stream_reader
   #(parameter WB_DW = 32,
     parameter WB_AW = 32,
     parameter FIFO_AW = 0,

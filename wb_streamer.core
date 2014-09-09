@@ -8,11 +8,11 @@ simulators = icarus modelsim
 src_files =
  rtl/verilog/wb_stream_cfg.v
  rtl/verilog/wb_stream_ctrl.v
- rtl/verilog/wb_stream_writer.v
+ rtl/verilog/wb_stream_reader.v
  
 tb_private_src_files =
  bench/wb_reader.v
- bench/wb_stream_writer_tb.v
+ bench/wb_stream_reader_tb.v
 
 [simulator]
 toplevel=wb_streamer_tb
