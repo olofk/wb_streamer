@@ -9,13 +9,17 @@ src_files =
  rtl/verilog/wb_stream_cfg.v
  rtl/verilog/wb_stream_ctrl.v
  rtl/verilog/wb_stream_reader.v
+ rtl/verilog/wb_stream_writer_cfg.v
+ rtl/verilog/wb_stream_writer_ctrl.v
+ rtl/verilog/wb_stream_writer.v
  
 tb_private_src_files =
  bench/wb_reader.v
  bench/wb_stream_reader_tb.v
+ bench/wb_stream_writer_tb.v
 
 [simulator]
-toplevel=wb_streamer_tb
+toplevel=wb_stream_writer_tb
 
 [icarus]
 depend = vlog_tb_utils wb_bfm wb_ram
