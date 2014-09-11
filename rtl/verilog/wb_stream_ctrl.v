@@ -111,7 +111,6 @@ module wb_stream_ctrl
 	S_ACTIVE : begin
 	   active <= 1'b1;
 	   if(wrap_buf | burst_end) begin
-	      wbm_cti_o <= 3'b111;
 	      active <= 1'b0;
 	      state <= S_IDLE;
 	      fifo_rd <= 1'b0;
