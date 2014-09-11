@@ -19,9 +19,9 @@ module wb_stream_writer
     input 		 wbm_err_i,
     input 		 wbm_rty_i,
     //Stream interface
-    output [WB_DW-1:0] 	 stream_data_o,
-    output 		 stream_dv_o,
-    input 		 stream_busy_i,
+    output [WB_DW-1:0] 	 stream_m_data_o,
+    output 		 stream_m_valid_o,
+    input 		 stream_m_ready_i,
     //Configuration interface
     input [WB_AW-1:0] 	 wbs_adr_i,
     input [WB_DW-1:0] 	 wbs_dat_i,
@@ -49,8 +49,8 @@ module wb_stream_writer
    wire [WB_AW-1:0] 	 buf_size;
    wire [WB_AW-1:0] 	 burst_size;
    
-   assign stream_dv_o = !fifo_empty;
-   assign fifo_rd = stream_dv_o & !stream_busy_i;
+   assign stream_m_valid_o = !fifo_empty;
+   assign fifo_rd = stream_m_valid_o & stream_m_ready_i;
    
    wb_stream_writer_ctrl
      #(.WB_AW (WB_AW),
@@ -119,7 +119,7 @@ module wb_stream_writer
     .wr_en (fifo_wr),
     .full  (fifo_full),
     
-    .dout  (stream_data_o),
+    .dout  (stream_m_data_o),
     .rd_en (fifo_rd),
     .empty (fifo_empty),
 

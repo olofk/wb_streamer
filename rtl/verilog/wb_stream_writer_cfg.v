@@ -24,7 +24,7 @@ module wb_stream_writer_cfg
    output reg [WB_AW-1:0] burst_size);
 
    initial begin
-      enable = 1'b1;
+      enable = 1'b0;
       start_adr = 0; 
       buf_size  = 8;//FIXME
       burst_size = 4; //FIXME

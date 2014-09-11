@@ -10,6 +10,8 @@ module wb_stream_writer_tb;
    localparam WB_DW = 32;
    localparam WSB = WB_DW/8; //Word size in bytes
    
+   localparam MEM_SIZE = 512; //Memory size in bytes
+   
    localparam BUF_SIZE = 128; //Buffer size in bytes
    localparam BURST_SIZE = 8;
    
@@ -37,18 +39,15 @@ module wb_stream_writer_tb;
 
    //Stream interface
    wire [WB_DW-1:0]    stream_data;
-   wire 	       stream_dv;
-   wire 	       stream_busy;
+   wire 	       stream_valid;
+   wire 	       stream_ready;
 
-   reg 		       rst2 = 1'b1;
-   initial #150 rst2 <= 0;
-   
    wb_stream_writer
      #(.FIFO_AW (FIFO_AW),
        .MAX_BURST_LEN (MAX_BURST_LEN))
    wb_stream_writer0
      (.clk       (clk),
-      .rst       (rst2),
+      .rst       (rst),
       //Stream data output
       .wbm_adr_o (wb_m2s_data_adr),
       .wbm_dat_o (wb_m2s_data_dat),
@@ -63,9 +62,9 @@ module wb_stream_writer_tb;
       .wbm_err_i (wb_s2m_data_err),
       .wbm_rty_i (wb_s2m_data_rty),
       //FIFO interface
-      .stream_data_o (stream_data),
-      .stream_dv_o   (stream_dv),
-      .stream_busy_i (!stream_busy));
+      .stream_m_data_o  (stream_data),
+      .stream_m_valid_o (stream_valid),
+      .stream_m_ready_i (stream_ready));
 
    fifo_fwft_reader
      #(.WIDTH (WB_DW),
@@ -73,16 +72,16 @@ module wb_stream_writer_tb;
    fifo_reader0
      (.clk   (clk),
       .din   (stream_data),
-      .rden  (stream_busy),
-      .empty (!stream_dv));
+      .rden  (stream_ready),
+      .empty (!stream_valid));
 
    wb_ram
-     #(.depth (BUF_SIZE))
+     #(.depth (MEM_SIZE))
    wb_ram0
      (//Wishbone Master interface
       .wb_clk_i (clk),
-      .wb_rst_i (rst2),
-      .wb_adr_i	(wb_m2s_data_adr[$clog2(BUF_SIZE)-1:0]),
+      .wb_rst_i (rst),
+      .wb_adr_i	(wb_m2s_data_adr[$clog2(MEM_SIZE)-1:0]),
       .wb_dat_i	(wb_m2s_data_dat),
       .wb_sel_i	(wb_m2s_data_sel),
       .wb_we_i	(wb_m2s_data_we),
@@ -94,23 +93,22 @@ module wb_stream_writer_tb;
       .wb_ack_o	(wb_s2m_data_ack),
       .wb_err_o (wb_s2m_data_err));
    
-   integer 			       i;
-   reg [WB_DW-1:0] 		       start_adr;
-   
    initial begin
       @(negedge rst);
       @(posedge clk);
 
-      start_adr = 0;
-      
       //FIXME: Implement wb slave config IF
       wb_stream_writer0.cfg.buf_size = BUF_SIZE;
       wb_stream_writer0.cfg.burst_size = BURST_SIZE;
-      wb_stream_writer0.cfg.start_adr = start_adr;
-      
       //fifo_writer0.rate = 0.1;
+
+      //Initialize memory
+      init_mem();
       
-      test_main();
+      @(posedge clk);
+      @(posedge clk);
+      
+      repeat (24) test_main();
       $display("All done");
       $finish;
    end
@@ -120,78 +118,85 @@ module wb_stream_writer_tb;
       reg [BUF_SIZE*WB_DW-1:0] received;
       integer 		       samples;
       integer 		       idx;
-      integer 		       tmp;
-      integer 		       seed;
       integer 		       start_addr;
+      integer 		       seed;
+      integer 		       tmp;
       
       begin
-	 start_addr = 0;
+	 samples = BUF_SIZE/WSB;
 	 
-	 //Generate stimuli
-	 for(idx=0 ; idx<BUF_SIZE/WSB ; idx=idx+1) begin
-	    tmp = $random(seed);
-	    expected[WB_DW*idx+:WB_DW] = tmp[WB_DW-1:0];
-	 end
-	 samples = idx;
+	 tmp = $dist_uniform(seed,0,(MEM_SIZE-BUF_SIZE)/WSB);
 	 
-	 //Initialize memory
-	 $display("Initializing memory with %0d samples starting at %0d", samples, start_addr);
-	 mem_write(expected, samples, start_addr);
-
+	 start_addr = tmp*4;
+	 $display("Setting start address to 0x%8x", start_addr);
+	 wb_stream_writer0.cfg.start_adr = start_addr;
+	 @(posedge clk);
+	 
+	 //Strobe enable signal
+	 @(posedge clk);
+	 wb_stream_writer0.cfg.enable = 1'b1;
+	 @(posedge clk);
+	 @(posedge clk);
+	 wb_stream_writer0.cfg.enable = 1'b0;
 	 @(posedge clk);
 	 
 	 //Start receive transactor
 	 fifo_read(received, samples);
-
-	 compare(expected, received, samples);
+	 
+	 verify(received, samples, start_addr);
       end
    endtask
    
    task fifo_read;
       output [FIFO_MAX_BLOCK_SIZE*WB_DW-1:0] data_o;
-      input integer 			    length_i;
+      input integer 			     length_i;
       
       begin
 	 fifo_reader0.read_block(data_o, length_i);
-	 $display("Done reading %0d words from DUT", length_i);
       end
    endtask
 
-   task mem_write;
-      input [BUF_SIZE*WB_DW-1:0] data_i;
-      input integer 		 length_i;
-      input [WB_AW-1:0] 	 start_addr_i;
-      
+   task init_mem;
       integer 	      idx;
+      integer 	      tmp;
+      integer 	      seed;
       
       begin
-	 for(idx = 0; idx < length_i ; idx = idx + 1) begin
-	    $display("Writing 0x%8x to address 0x%8x", data_i[idx*WB_DW+:WB_DW], start_addr_i+idx*4);
-	    wb_ram0.ram0.mem[start_addr_i+idx] = data_i[idx*WB_DW+:WB_DW];
+	 for(idx = 0; idx < MEM_SIZE/WSB ; idx = idx + 1) begin
+	    tmp = $random(seed);
+	    wb_ram0.ram0.mem[idx] = tmp[WB_DW-1:0];
+	    $display("Writing 0x%8x to address 0x%8x", tmp, idx*WSB);
 	 end
       end
    endtask
 
-   task compare;
-      input [BUF_SIZE*WB_DW-1:0] expected_i;
+   task verify;
       input [BUF_SIZE*WB_DW-1:0] received_i;
-      input integer 		 samples;
+      input integer 		 samples_i;
+      input integer 		 start_addr_i;
 
       integer 			 idx;
-      reg [WB_DW-1:0] expected;
-      reg [WB_DW-1:0] received;
-
+      reg [WB_DW-1:0] 		 expected;
+      reg [WB_DW-1:0] 		 received;
+      reg 			 err;
+      
       begin
-	 for(idx=0 ; idx<samples ; idx=idx+1) begin
-	    expected = expected_i[idx*WB_DW+:WB_DW];
+	 err = 0;
+	 for(idx=0 ; idx<samples_i ; idx=idx+1) begin
+	    expected = wb_ram0.ram0.mem[start_addr_i/WSB+idx];
 	    received = received_i[idx*WB_DW+:WB_DW];
-	 
+	    
 	    if(expected !==
 	       received) begin
-	       $display("Error at sample %0d. Expected 0x%8x, got 0x%8x", idx, expected, received);
-	      
+	       $display("Error at address 0x%8x. Expected 0x%8x, got 0x%8x", start_addr_i+idx*4, expected, received);
+	       err = 1'b1;
 	    end
+	    //else $display("0x%8x", received);
 	 end
+	 if(!err)
+	   $display("Successfully verified %0d words", idx);
+	 else
+	   $finish;
       end
    endtask
    
