@@ -92,8 +92,13 @@ module wb_stream_writer_tb;
       .wb_dat_o	(wb_s2m_data_dat),
       .wb_ack_o	(wb_s2m_data_ack),
       .wb_err_o (wb_s2m_data_err));
+
+   integer 	       TRANSACTIONS;
    
    initial begin
+      if(!$value$plusargs("transactions=%d", TRANSACTIONS))
+	TRANSACTIONS = 1000;
+
       @(negedge rst);
       @(posedge clk);
 
@@ -108,7 +113,7 @@ module wb_stream_writer_tb;
       @(posedge clk);
       @(posedge clk);
       
-      repeat (24) test_main();
+      repeat (TRANSACTIONS) test_main();
       $display("All done");
       $finish;
    end
