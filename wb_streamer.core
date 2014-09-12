@@ -18,6 +18,9 @@ tb_private_src_files =
  bench/wb_stream_reader_tb.v
  bench/wb_stream_writer_tb.v
 
+[plusargs]
+verbose = bool Enable debug printouts in test bench
+
 [simulator]
 toplevel=wb_stream_writer_tb
 

@@ -22,6 +22,7 @@ module wb_stream_writer_tb;
    initial #100 rst <= 0;
 
    vlog_tb_utils vlog_tb_utils0();
+   vlog_functions utils();
    
    //Wishbone memory interface
    wire [WB_AW-1:0]    wb_m2s_data_adr;
@@ -136,13 +137,17 @@ module wb_stream_writer_tb;
       .wb_ack_i (wb_s2m_cfg_ack),
       .wb_err_i (wb_s2m_cfg_err),
       .wb_rty_i (wb_s2m_cfg_rty));
-   
+
+   integer 	       transaction;
    integer 	       TRANSACTIONS;
+   reg 		       VERBOSE = 0;
    
    initial begin
       if(!$value$plusargs("transactions=%d", TRANSACTIONS))
 	TRANSACTIONS = 1000;
-
+      if($test$plusargs("verbose"))
+	VERBOSE = 1;
+      
       @(negedge rst);
       @(posedge clk);
 
@@ -156,8 +161,10 @@ module wb_stream_writer_tb;
       @(posedge clk);
       @(posedge clk);
       
-      repeat (TRANSACTIONS) test_main();
-      $display("All done");
+      for(transaction=1;transaction<=TRANSACTIONS;transaction=transaction+1) begin
+	 test_main();
+	 utils.progress_bar("Completed transaction", transaction, TRANSACTIONS);
+      end
       $finish;
    end
 
@@ -173,10 +180,9 @@ module wb_stream_writer_tb;
       begin
 	 samples = BUF_SIZE/WSB;
 	 
-	 tmp = $dist_uniform(seed,0,(MEM_SIZE-BUF_SIZE)/WSB);
+	 start_addr = $dist_uniform(seed,0,(MEM_SIZE-BUF_SIZE)/WSB)*WSB;
 	 
-	 start_addr = tmp*4;
-	 $display("Setting start address to 0x%8x", start_addr);
+	 if(VERBOSE) $display("Setting start address to 0x%8x", start_addr);
 	 wb_stream_writer0.cfg.start_adr = start_addr;
 	 @(posedge clk);
 	
@@ -220,7 +226,7 @@ module wb_stream_writer_tb;
 	 for(idx = 0; idx < MEM_SIZE/WSB ; idx = idx + 1) begin
 	    tmp = $random(seed);
 	    wb_ram0.ram0.mem[idx] = tmp[WB_DW-1:0];
-	    $display("Writing 0x%8x to address 0x%8x", tmp, idx*WSB);
+	    if(VERBOSE) $display("Writing 0x%8x to address 0x%8x", tmp, idx*WSB);
 	 end
       end
    endtask
@@ -246,12 +252,11 @@ module wb_stream_writer_tb;
 	       $display("Error at address 0x%8x. Expected 0x%8x, got 0x%8x", start_addr_i+idx*4, expected, received);
 	       err = 1'b1;
 	    end
-	    //else $display("0x%8x", received);
 	 end
-	 if(!err)
-	   $display("Successfully verified %0d words", idx);
-	 else
+	 if(err)
 	   $finish;
+	 else
+	   if (VERBOSE) $display("Successfully verified %0d words", idx);
       end
    endtask
    
