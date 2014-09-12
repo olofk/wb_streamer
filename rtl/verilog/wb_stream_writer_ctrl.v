@@ -26,21 +26,21 @@ module wb_stream_writer_ctrl
    input 		    enable,
    input [WB_AW-1:0] 	    start_adr,
    input [WB_AW-1:0] 	    buf_size,
-   input [WB_AW-1:0] 	    burst_size,
-   input 		    continous);
+   input [WB_AW-1:0] 	    burst_size);
+   
    
 //`include "wb_bfm_params.v"
    
    initial if(FIFO_AW == 0) $error("%m : Error: FIFO_AW must be > 0");
-   
+
    reg [WB_AW-1:0] 	    adr;
    reg 			    active;
 
    wire 		    timeout = 1'b0;
    reg 			    const_burst;
    reg 			    last_adr;
-   reg 			    wrap_buf;
    reg [$clog2(MAX_BURST_LEN-1):0] burst_cnt;
+   reg 				   enable_r;
    
    //FSM states
    localparam S_IDLE   = 0;
@@ -63,12 +63,11 @@ module wb_stream_writer_ctrl
       fifo_wr <= wbm_ack_i;
 
       //Address generation
-      last_adr = 1'b0;
-      wrap_buf = 1'b0;
+      last_adr = (adr == buf_size[WB_AW-1:2]-1);
       if(wbm_ack_i)
-	if(adr == buf_size-1) begin
+	if (last_adr)
 	  adr = 0;
-	end else
+	else
 	  adr = adr+1;
       wbm_adr_o <= start_adr + adr*4;
       
@@ -92,17 +91,21 @@ module wb_stream_writer_ctrl
       active <= 1'b0;
       case (state)
 	S_IDLE : begin
-	   if (fifo_cnt+burst_size < 2**FIFO_AW) begin
+	   if (enable_r & (fifo_cnt+burst_size < 2**FIFO_AW)) begin
 	      state <= S_ACTIVE;
 	      active <= 1'b1;
 	   end
+	   if (enable)
+	     enable_r <= 1'b1;
+
 	end
 	S_ACTIVE : begin
 	   active <= 1'b1;
 	   if(burst_end) begin
-	      wbm_cti_o <= 3'b111;
 	      active <= 1'b0;
 	      state <= S_IDLE;
+	      if (last_adr)
+		enable_r <= 1'b0;
 	   end
 	end
 	default : begin
@@ -114,6 +117,7 @@ module wb_stream_writer_ctrl
 	 wbm_cyc_o <= 1'b0;
 	 wbm_stb_o <= 1'b0;
 	 adr <= 0;
+	 enable_r <= 1'b0;
 	 
       end
    end
