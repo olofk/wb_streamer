@@ -19,9 +19,9 @@ module wb_stream_reader
     input 		 wbm_err_i,
     input 		 wbm_rty_i,
    //FIFO interface
-    input [WB_DW-1:0] 	 stream_data,
-    input 		 stream_dv,
-    output 		 stream_halt,
+    input [WB_DW-1:0] 	 stream_s_data_i,
+    input 		 stream_s_valid_i,
+    output 		 stream_s_ready_o,
    //Configuration interface
     input [WB_AW-1:0] 	 wbs_adr_i,
     input [WB_DW-1:0] 	 wbs_dat_i,
@@ -41,6 +41,7 @@ module wb_stream_reader
    wire [WB_DW-1:0] 	 fifo_dout;
    wire [FIFO_AW-1:0] 	 fifo_cnt;
    wire 		 fifo_rd;
+   wire 		 fifo_full;
 
    //Configuration parameters
    wire 		 enable;
@@ -105,6 +106,8 @@ module wb_stream_reader
       .start_adr (start_adr),
       .buf_size  (buf_size),
       .burst_size (burst_size));
+
+   assign stream_ready_o = !fifo_full;
    
    fifo_fwft
      #(.DATA_WIDTH (WB_DW),
@@ -112,9 +115,9 @@ module wb_stream_reader
    fifo0
    (.clk (clk),
     .rst (rst),
-    .din (stream_data),
-    .wr_en (stream_dv),
-    .full (stream_halt),
+    .din (stream_data_i),
+    .wr_en (stream_valid_i),
+    .full (fifo_full),
     .dout (fifo_dout),
     .rd_en (fifo_rd),
     .empty (fifo_empty),

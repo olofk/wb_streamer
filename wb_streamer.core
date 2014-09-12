@@ -6,8 +6,8 @@ simulators = icarus modelsim
 
 [verilog]
 src_files =
- rtl/verilog/wb_stream_cfg.v
- rtl/verilog/wb_stream_ctrl.v
+ rtl/verilog/wb_stream_reader_cfg.v
+ rtl/verilog/wb_stream_reader_ctrl.v
  rtl/verilog/wb_stream_reader.v
  rtl/verilog/wb_stream_writer_cfg.v
  rtl/verilog/wb_stream_writer_ctrl.v
