@@ -37,6 +37,20 @@ module wb_stream_writer_tb;
    wire 	       wb_s2m_data_err;
    wire 	       wb_s2m_data_rty;
 
+   //Wishbone configuration interface
+   wire [WB_AW-1:0]    wb_m2s_cfg_adr;
+   wire [WB_DW-1:0]    wb_m2s_cfg_dat;
+   wire [WB_DW/8-1:0]  wb_m2s_cfg_sel;
+   wire 	       wb_m2s_cfg_we;
+   wire 	       wb_m2s_cfg_cyc;
+   wire 	       wb_m2s_cfg_stb;
+   wire [2:0] 	       wb_m2s_cfg_cti;
+   wire [1:0] 	       wb_m2s_cfg_bte;
+   wire [WB_DW-1:0]    wb_s2m_cfg_dat;
+   wire 	       wb_s2m_cfg_ack;
+   wire 	       wb_s2m_cfg_err;
+   wire 	       wb_s2m_cfg_rty;
+
    //Stream interface
    wire [WB_DW-1:0]    stream_data;
    wire 	       stream_valid;
@@ -64,7 +78,19 @@ module wb_stream_writer_tb;
       //FIFO interface
       .stream_m_data_o  (stream_data),
       .stream_m_valid_o (stream_valid),
-      .stream_m_ready_i (stream_ready));
+      .stream_m_ready_i (stream_ready),
+      .wbs_adr_i (wb_m2s_cfg_adr),
+      .wbs_dat_i (wb_m2s_cfg_dat),
+      .wbs_sel_i (wb_m2s_cfg_sel),
+      .wbs_we_i  (wb_m2s_cfg_we), 
+      .wbs_cyc_i (wb_m2s_cfg_cyc),
+      .wbs_stb_i (wb_m2s_cfg_stb),
+      .wbs_cti_i (wb_m2s_cfg_cti),
+      .wbs_bte_i (wb_m2s_cfg_bte),
+      .wbs_dat_o (wb_s2m_cfg_dat),
+      .wbs_ack_o (wb_s2m_cfg_ack),
+      .wbs_err_o (wb_s2m_cfg_err),
+      .wbs_rty_o (wb_s2m_cfg_rty));
 
    fifo_fwft_reader
      #(.WIDTH (WB_DW),
@@ -93,6 +119,24 @@ module wb_stream_writer_tb;
       .wb_ack_o	(wb_s2m_data_ack),
       .wb_err_o (wb_s2m_data_err));
 
+   wb_bfm_master
+     #(.MAX_BURST_LENGTH (1)) 
+   wb_cfg
+     (.wb_clk_i (clk),
+      .wb_rst_i (rst),
+      .wb_adr_o (wb_m2s_cfg_adr),
+      .wb_dat_o (wb_m2s_cfg_dat),
+      .wb_sel_o (wb_m2s_cfg_sel),
+      .wb_we_o  (wb_m2s_cfg_we), 
+      .wb_cyc_o (wb_m2s_cfg_cyc),
+      .wb_stb_o (wb_m2s_cfg_stb),
+      .wb_cti_o (wb_m2s_cfg_cti),
+      .wb_bte_o (wb_m2s_cfg_bte),
+      .wb_dat_i (wb_s2m_cfg_dat),
+      .wb_ack_i (wb_s2m_cfg_ack),
+      .wb_err_i (wb_s2m_cfg_err),
+      .wb_rty_i (wb_s2m_cfg_rty));
+   
    integer 	       TRANSACTIONS;
    
    initial begin
@@ -102,9 +146,8 @@ module wb_stream_writer_tb;
       @(negedge rst);
       @(posedge clk);
 
-      //FIXME: Implement wb slave config IF
-      wb_stream_writer0.cfg.buf_size = BUF_SIZE;
-      wb_stream_writer0.cfg.burst_size = BURST_SIZE;
+      wb_write(8, BUF_SIZE);
+      wb_write(12, BURST_SIZE);
       //fifo_writer0.rate = 0.1;
 
       //Initialize memory
@@ -136,19 +179,26 @@ module wb_stream_writer_tb;
 	 $display("Setting start address to 0x%8x", start_addr);
 	 wb_stream_writer0.cfg.start_adr = start_addr;
 	 @(posedge clk);
-	 
+	
 	 //Strobe enable signal
-	 @(posedge clk);
-	 wb_stream_writer0.cfg.enable = 1'b1;
-	 @(posedge clk);
-	 @(posedge clk);
-	 wb_stream_writer0.cfg.enable = 1'b0;
-	 @(posedge clk);
+	 wb_write(0, 1);
 	 
 	 //Start receive transactor
 	 fifo_read(received, samples);
 	 
 	 verify(received, samples, start_addr);
+      end
+   endtask
+
+   task wb_write;
+      input [WB_AW-1:0] addr_i;
+      input [WB_DW-1:0] data_i;
+
+      reg 		err;
+      begin
+	 wb_cfg.write(addr_i, data_i, 4'hf, err);
+	 if(err)
+	   $error("Error writing to config interface address 0x%8x", addr_i);
       end
    endtask
    
