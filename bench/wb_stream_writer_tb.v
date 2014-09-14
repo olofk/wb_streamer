@@ -2,9 +2,8 @@ module wb_stream_writer_tb;
 
    localparam FIFO_MAX_BLOCK_SIZE = 32;
    localparam FIFO_AW = 5;
-   localparam RAM_AW = 9;
    
-   localparam MAX_BURST_LEN = 128;
+   localparam MAX_BURST_LEN = 32;
    
    localparam WB_AW = 32;
    localparam WB_DW = 32;
@@ -14,7 +13,13 @@ module wb_stream_writer_tb;
    
    localparam MAX_BUF_SIZE = 128; //Buffer size in bytes
    localparam BURST_SIZE = 8;
-   
+
+   //Configuration registers
+   localparam REG_ENABLE     = 0*WSB;
+   localparam REG_START_ADDR = 1*WSB;
+   localparam REG_BUF_SIZE   = 2*WSB;
+   localparam REG_BURST_SIZE = 3*WSB;
+
    reg clk = 1'b1;
    reg rst = 1'b1;
    
@@ -151,7 +156,6 @@ module wb_stream_writer_tb;
       @(negedge rst);
       @(posedge clk);
 
-      wb_write(12, BURST_SIZE);
       //fifo_writer0.rate = 0.1;
 
       //Initialize memory
@@ -173,26 +177,29 @@ module wb_stream_writer_tb;
 
       integer 		       start_addr;
       integer 		       buf_size;
+      integer 		       burst_len;
       
       begin
+	 burst_len = $dist_uniform(seed, 2, MAX_BURST_LEN/WSB);
 
 	 //FIXME: buf_size currently needs to be a multiple of burst_size
 	 //buf_size   = $dist_uniform(seed,1,MAX_BUF_SIZE/WSB)*WSB;
-	 buf_size = BURST_SIZE*WSB*$dist_uniform(seed, 1, MAX_BUF_SIZE/(BURST_SIZE*WSB));
+	 buf_size = burst_len*WSB*$dist_uniform(seed, 1, MAX_BUF_SIZE/(burst_len*WSB));
 
 	 start_addr = $dist_uniform(seed,0,(MEM_SIZE-buf_size)/WSB)*WSB;
 
 	 if(VERBOSE) $display("Setting start address to 0x%8x", start_addr);
 	 if(VERBOSE) $display("Setting buffer size to %0d", buf_size);
+	 if(VERBOSE) $display("Setting burst length to %0d", burst_len);
 
-
-	 wb_write(4, start_addr);
-	 wb_write(8, buf_size);
+	 wb_write(REG_START_ADDR, start_addr);
+	 wb_write(REG_BUF_SIZE  , buf_size);
+	 wb_write(REG_BURST_SIZE, burst_len);
 
 	 @(posedge clk);
 	
 	 //Strobe enable signal
-	 wb_write(0, 1);
+	 wb_write(REG_ENABLE, 1);
 	 
 	 //Start receive transactor
 	 fifo_read(received, buf_size/WSB);
