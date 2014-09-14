@@ -91,7 +91,7 @@ module wb_stream_writer_ctrl
       active <= 1'b0;
       case (state)
 	S_IDLE : begin
-	   if (enable_r & (fifo_cnt+burst_size < 2**FIFO_AW)) begin
+	   if (enable_r & (fifo_cnt+burst_size <= 2**FIFO_AW)) begin
 	      state <= S_ACTIVE;
 	      active <= 1'b1;
 	   end
