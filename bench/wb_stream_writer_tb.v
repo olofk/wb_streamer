@@ -12,7 +12,7 @@ module wb_stream_writer_tb;
    
    localparam MEM_SIZE = 512; //Memory size in bytes
    
-   localparam BUF_SIZE = 128; //Buffer size in bytes
+   localparam MAX_BUF_SIZE = 128; //Buffer size in bytes
    localparam BURST_SIZE = 8;
    
    reg clk = 1'b1;
@@ -151,14 +151,12 @@ module wb_stream_writer_tb;
       @(negedge rst);
       @(posedge clk);
 
-      wb_write(8, BUF_SIZE);
       wb_write(12, BURST_SIZE);
       //fifo_writer0.rate = 0.1;
 
       //Initialize memory
       init_mem();
       
-      @(posedge clk);
       @(posedge clk);
       
       for(transaction=1;transaction<=TRANSACTIONS;transaction=transaction+1) begin
@@ -169,30 +167,37 @@ module wb_stream_writer_tb;
    end
 
    task test_main;
-      reg [BUF_SIZE*WB_DW-1:0] expected;
-      reg [BUF_SIZE*WB_DW-1:0] received;
-      integer 		       samples;
-      integer 		       idx;
-      integer 		       start_addr;
+      reg [MAX_BUF_SIZE*WB_DW-1:0] received;
       integer 		       seed;
       integer 		       tmp;
+
+      integer 		       start_addr;
+      integer 		       buf_size;
       
       begin
-	 samples = BUF_SIZE/WSB;
-	 
-	 start_addr = $dist_uniform(seed,0,(MEM_SIZE-BUF_SIZE)/WSB)*WSB;
-	 
+
+	 //FIXME: buf_size currently needs to be a multiple of burst_size
+	 //buf_size   = $dist_uniform(seed,1,MAX_BUF_SIZE/WSB)*WSB;
+	 buf_size = BURST_SIZE*WSB*$dist_uniform(seed, 1, MAX_BUF_SIZE/(BURST_SIZE*WSB));
+
+	 start_addr = $dist_uniform(seed,0,(MEM_SIZE-buf_size)/WSB)*WSB;
+
 	 if(VERBOSE) $display("Setting start address to 0x%8x", start_addr);
-	 wb_stream_writer0.cfg.start_adr = start_addr;
+	 if(VERBOSE) $display("Setting buffer size to %0d", buf_size);
+
+
+	 wb_write(4, start_addr);
+	 wb_write(8, buf_size);
+
 	 @(posedge clk);
 	
 	 //Strobe enable signal
 	 wb_write(0, 1);
 	 
 	 //Start receive transactor
-	 fifo_read(received, samples);
+	 fifo_read(received, buf_size/WSB);
 	 
-	 verify(received, samples, start_addr);
+	 verify(received, buf_size/WSB, start_addr);
       end
    endtask
 
@@ -232,7 +237,7 @@ module wb_stream_writer_tb;
    endtask
 
    task verify;
-      input [BUF_SIZE*WB_DW-1:0] received_i;
+      input [MAX_BUF_SIZE*WB_DW-1:0] received_i;
       input integer 		 samples_i;
       input integer 		 start_addr_i;
 
@@ -251,7 +256,7 @@ module wb_stream_writer_tb;
 	       received) begin
 	       $display("Error at address 0x%8x. Expected 0x%8x, got 0x%8x", start_addr_i+idx*4, expected, received);
 	       err = 1'b1;
-	    end
+	    end //else $display("0x%8x : 0x%8x", start_addr_i+idx*WSB, received);
 	 end
 	 if(err)
 	   $finish;
