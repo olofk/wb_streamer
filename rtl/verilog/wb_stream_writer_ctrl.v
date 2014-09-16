@@ -108,6 +108,7 @@ module wb_stream_writer_ctrl
       endcase // case (state)
       
       if(wb_rst_i) begin
+	 state <= S_IDLE;
 	 adr <= 0;
 	 enable_r <= 1'b0;
 	 
