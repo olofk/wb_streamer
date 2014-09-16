@@ -25,7 +25,7 @@ verbose = bool Enable debug printouts in test bench
 toplevel=wb_stream_writer_tb
 
 [icarus]
-depend = vlog_tb_utils wb_bfm wb_ram
+depend = vlog_tb_utils wb_bfm
 
 [modelsim]
-depend = vlog_tb_utils wb_bfm wb_ram
+depend = vlog_tb_utils wb_bfm

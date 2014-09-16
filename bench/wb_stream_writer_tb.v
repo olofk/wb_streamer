@@ -3,7 +3,7 @@ module wb_stream_writer_tb;
    localparam FIFO_AW = 5;
    
    localparam MAX_BURST_LEN = 32;
-   
+
    localparam WB_AW = 32;
    localparam WB_DW = 32;
    localparam WSB = WB_DW/8; //Word size in bytes
@@ -106,13 +106,15 @@ module wb_stream_writer_tb;
       .rden  (stream_ready),
       .empty (!stream_valid));
 
-   wb_ram
-     #(.depth (MEM_SIZE))
+   wb_bfm_memory
+     #(.mem_size_bytes(MEM_SIZE),
+       .rd_min_delay (0),
+       .rd_max_delay (5))
    wb_ram0
      (//Wishbone Master interface
       .wb_clk_i (clk),
       .wb_rst_i (rst),
-      .wb_adr_i	(wb_m2s_data_adr[$clog2(MEM_SIZE)-1:0]),
+      .wb_adr_i	(wb_m2s_data_adr),
       .wb_dat_i	(wb_m2s_data_dat),
       .wb_sel_i	(wb_m2s_data_sel),
       .wb_we_i	(wb_m2s_data_we),
@@ -199,7 +201,7 @@ module wb_stream_writer_tb;
 	
 	 //Strobe enable signal
 	 wb_write(REG_ENABLE, 1);
-	 
+
 	 //Start receive transactor
 	 fifo_read(received, buf_size/WSB);
 	 
@@ -236,7 +238,7 @@ module wb_stream_writer_tb;
       begin
 	 for(idx = 0; idx < MEM_SIZE/WSB ; idx = idx + 1) begin
 	    tmp = $random(seed);
-	    wb_ram0.ram0.mem[idx] = tmp[WB_DW-1:0];
+	    wb_ram0.mem[idx] = tmp[WB_DW-1:0];
 	    if(VERBOSE) $display("Writing 0x%8x to address 0x%8x", tmp, idx*WSB);
 	 end
       end
@@ -255,7 +257,7 @@ module wb_stream_writer_tb;
       begin
 	 err = 0;
 	 for(idx=0 ; idx<samples_i ; idx=idx+1) begin
-	    expected = wb_ram0.ram0.mem[start_addr_i/WSB+idx];
+	    expected = wb_ram0.mem[start_addr_i/WSB+idx];
 	    received = received_i[idx*WB_DW+:WB_DW];
 	    
 	    if(expected !==
