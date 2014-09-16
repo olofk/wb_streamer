@@ -18,6 +18,8 @@ module wb_stream_writer_cfg
    output 		  wb_err_o,
    output 		  wb_rty_o,
    //Application IF
+   output reg 		  irq,
+   input 		  busy,
    output reg 		  enable,
    output reg [WB_AW-1:0] start_adr,
    output reg [WB_AW-1:0] buf_size,
@@ -30,8 +32,15 @@ module wb_stream_writer_cfg
       burst_size = 4; //FIXME
    end*/
 
+   reg 			  busy_r;
+   always @(posedge wb_clk_i)
+     if (wb_rst_i)
+       busy_r <= 0;
+     else
+       busy_r <= busy;
+
    // Read
-   assign wb_dat_o = 0;
+   assign wb_dat_o = wb_adr_i[5:2] == 0 ? {{(WB_DW-2){1'b0}}, irq, busy} : 0;
 
    always @(posedge wb_clk_i) begin
       // Ack generation
@@ -42,22 +51,30 @@ module wb_stream_writer_cfg
 
       //Read/Write logic
       enable <= 0;
-      if (wb_stb_i & wb_cyc_i & wb_we_i) begin
+      if (wb_stb_i & wb_cyc_i & wb_we_i & wb_ack_o) begin
 	 case (wb_adr_i[31:2])
-	   0 : enable    <= 1;
+	   0 : begin
+	      if (wb_dat_i[0]) enable <= 1;
+	      if (wb_dat_i[1]) irq <= 0;
+	   end
 	   1 : start_adr <= wb_dat_i;
 	   2 : buf_size  <= wb_dat_i;
 	   3 : burst_size <= wb_dat_i;
 	   default : ;
 	 endcase // case (wb_adr_i[31:2])
       end
-      
+
+      // irq logic, signal on falling edge of busy
+      if (!busy & busy_r)
+	irq <= 1;
+
       if (wb_rst_i) begin
 	 wb_ack_o   <= 0;
 	 enable     <= 1'b0;
 	 start_adr  <= 0; 
 	 buf_size   <= 0;
 	 burst_size <= 0;
+	 irq <= 0;
       end
    end
    assign wb_err_o = 0;

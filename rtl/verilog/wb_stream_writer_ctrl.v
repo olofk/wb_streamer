@@ -23,6 +23,7 @@ module wb_stream_writer_ctrl
    output 		    fifo_wr,
    input [FIFO_AW-1:0] 	    fifo_cnt,
    //Configuration interface
+   output reg		    busy,
    input 		    enable,
    input [WB_AW-1:0] 	    start_adr,
    input [WB_AW-1:0] 	    buf_size,
@@ -40,8 +41,7 @@ module wb_stream_writer_ctrl
    reg 			    const_burst;
    reg 			    last_adr;
    reg [$clog2(MAX_BURST_LEN-1):0] burst_cnt;
-   reg 				   enable_r;
-   
+
    //FSM states
    localparam S_IDLE   = 0;
    localparam S_ACTIVE = 1;
@@ -92,14 +92,13 @@ module wb_stream_writer_ctrl
 	   if (busy & (fifo_cnt+burst_size <= 2**FIFO_AW))
 	     state <= S_ACTIVE;
 	   if (enable)
-	     enable_r <= 1'b1;
-
+	     busy <= 1'b1;
 	end
 	S_ACTIVE : begin
 	   if (burst_end & wbm_ack_i) begin
 	      state <= S_IDLE;
 	      if (last_adr)
-		enable_r <= 1'b0;
+		busy <= 1'b0;
 	   end
 	end
 	default : begin
@@ -110,8 +109,7 @@ module wb_stream_writer_ctrl
       if(wb_rst_i) begin
 	 state <= S_IDLE;
 	 adr <= 0;
-	 enable_r <= 1'b0;
-	 
+	 busy <= 1'b0;
       end
    end
    

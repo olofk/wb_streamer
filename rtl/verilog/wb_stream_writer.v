@@ -22,6 +22,7 @@ module wb_stream_writer
     output [WB_DW-1:0] 	 stream_m_data_o,
     output 		 stream_m_valid_o,
     input 		 stream_m_ready_i,
+    output 		 stream_m_irq_o,
     //Configuration interface
     input [WB_AW-1:0] 	 wbs_adr_i,
     input [WB_DW-1:0] 	 wbs_dat_i,
@@ -81,6 +82,7 @@ module wb_stream_writer
       .start_adr  (start_adr),
       .buf_size   (buf_size),
       .burst_size (burst_size),
+      .busy       (busy),
       .enable     (enable));
 
    wb_stream_writer_cfg
@@ -103,6 +105,8 @@ module wb_stream_writer
       .wb_err_o (wbs_err_o),
       .wb_rty_o (wbs_rty_o),
       //Application IF
+      .irq       (stream_m_irq_o),
+      .busy      (busy),
       .enable    (enable),
       .start_adr (start_adr),
       .buf_size  (buf_size),
