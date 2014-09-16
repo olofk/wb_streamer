@@ -6,21 +6,21 @@ module wb_stream_writer_ctrl
   (//Stream data output
    input 		    wb_clk_i,
    input 		    wb_rst_i,
-   output reg [WB_AW-1:0]   wbm_adr_o,
-   output reg [WB_DW-1:0]   wbm_dat_o,
-   output reg [WB_DW/8-1:0] wbm_sel_o,
-   output reg 		    wbm_we_o ,
-   output reg 		    wbm_cyc_o,
-   output reg 		    wbm_stb_o,
+   output [WB_AW-1:0] 	    wbm_adr_o,
+   output [WB_DW-1:0] 	    wbm_dat_o,
+   output [WB_DW/8-1:0]	    wbm_sel_o,
+   output 		    wbm_we_o ,
+   output 		    wbm_cyc_o,
+   output 		    wbm_stb_o,
    output reg [2:0] 	    wbm_cti_o,
-   output reg [1:0] 	    wbm_bte_o,
+   output [1:0] 	    wbm_bte_o,
    input [WB_DW-1:0] 	    wbm_dat_i,
    input 		    wbm_ack_i,
    input 		    wbm_err_i,
    input 		    wbm_rty_i,
    //FIFO interface
-   output reg [WB_DW-1:0]   fifo_d,
-   output reg 		    fifo_wr,
+   output [WB_DW-1:0]   fifo_d,
+   output 		    fifo_wr,
    input [FIFO_AW-1:0] 	    fifo_cnt,
    //Configuration interface
    input 		    enable,
@@ -56,29 +56,27 @@ module wb_stream_writer_ctrl
 		  burst_end   ? 3'b111 :
 		  3'b010; //LINEAR_BURST;
    end
-   
+
+   assign fifo_d = wbm_dat_i;
+   assign fifo_wr = wbm_ack_i;
+
+   assign wbm_sel_o = 4'hf;
+   assign wbm_we_o = 1'b0;
+   assign wbm_cyc_o = active;
+   assign wbm_stb_o = active;
+   assign wbm_bte_o = 2'b00;
+   assign wbm_dat_o = {WB_DW{1'b0}};
+   assign wbm_adr_o = start_adr + adr*4;
+
    always @(posedge wb_clk_i) begin
-
-      fifo_d  <= wbm_dat_i;
-      fifo_wr <= wbm_ack_i;
-
       //Address generation
       last_adr = (adr == buf_size[WB_AW-1:2]-1);
-      if(wbm_ack_i)
-	if (last_adr)
-	  adr = 0;
-	else
-	  adr = adr+1;
-      wbm_adr_o <= start_adr + adr*4;
-      
-      wbm_dat_o <= {WB_DW{1'b0}};
-      
-      wbm_sel_o <= {4{active}};
-      wbm_we_o  <= 1'b0;
-      wbm_cyc_o <= active & !burst_end;
-      wbm_stb_o <= active & !burst_end;
-
-      wbm_bte_o <= 2'b00;
+      if (wbm_ack_i) begin
+	 if (last_adr)
+	   adr <= 0;
+	 else
+	   adr <= adr+1;
+      end
 
       //Burst counter
       if(!active)
@@ -114,8 +112,6 @@ module wb_stream_writer_ctrl
       endcase // case (state)
       
       if(wb_rst_i) begin
-	 wbm_cyc_o <= 1'b0;
-	 wbm_stb_o <= 1'b0;
 	 adr <= 0;
 	 enable_r <= 1'b0;
 	 
