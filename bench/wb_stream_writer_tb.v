@@ -1,6 +1,5 @@
 module wb_stream_writer_tb;
 
-   localparam FIFO_MAX_BLOCK_SIZE = 32;
    localparam FIFO_AW = 5;
    
    localparam MAX_BURST_LEN = 32;
@@ -100,7 +99,7 @@ module wb_stream_writer_tb;
 
    fifo_fwft_reader
      #(.WIDTH (WB_DW),
-       .MAX_BLOCK_SIZE (FIFO_MAX_BLOCK_SIZE))
+       .MAX_BLOCK_SIZE (MAX_BUF_SIZE/WSB))
    fifo_reader0
      (.clk   (clk),
       .din   (stream_data),
@@ -221,7 +220,7 @@ module wb_stream_writer_tb;
    endtask
    
    task fifo_read;
-      output [FIFO_MAX_BLOCK_SIZE*WB_DW-1:0] data_o;
+      output [MAX_BUF_SIZE*8-1:0] data_o;
       input integer 			     length_i;
       
       begin
@@ -244,7 +243,7 @@ module wb_stream_writer_tb;
    endtask
 
    task verify;
-      input [MAX_BUF_SIZE*WB_DW-1:0] received_i;
+      input [MAX_BUF_SIZE*8-1:0] received_i;
       input integer 		 samples_i;
       input integer 		 start_addr_i;
 
