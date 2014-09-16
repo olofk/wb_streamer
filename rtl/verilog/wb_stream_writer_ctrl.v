@@ -34,7 +34,7 @@ module wb_stream_writer_ctrl
    initial if(FIFO_AW == 0) $error("%m : Error: FIFO_AW must be > 0");
 
    reg [WB_AW-1:0] 	    adr;
-   reg 			    active;
+   wire			    active;
 
    wire 		    timeout = 1'b0;
    reg 			    const_burst;
@@ -57,6 +57,7 @@ module wb_stream_writer_ctrl
 		  3'b010; //LINEAR_BURST;
    end
 
+   assign active = (state == S_ACTIVE);
    assign fifo_d = wbm_dat_i;
    assign fifo_wr = wbm_ack_i;
 
@@ -86,21 +87,16 @@ module wb_stream_writer_ctrl
 	  burst_cnt <= burst_cnt + 1;
       
       //FSM
-      active <= 1'b0;
       case (state)
 	S_IDLE : begin
-	   if (enable_r & (fifo_cnt+burst_size <= 2**FIFO_AW)) begin
-	      state <= S_ACTIVE;
-	      active <= 1'b1;
-	   end
+	   if (busy & (fifo_cnt+burst_size <= 2**FIFO_AW))
+	     state <= S_ACTIVE;
 	   if (enable)
 	     enable_r <= 1'b1;
 
 	end
 	S_ACTIVE : begin
-	   active <= 1'b1;
-	   if(burst_end) begin
-	      active <= 1'b0;
+	   if (burst_end & wbm_ack_i) begin
 	      state <= S_IDLE;
 	      if (last_adr)
 		enable_r <= 1'b0;
