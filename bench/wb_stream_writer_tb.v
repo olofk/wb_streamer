@@ -60,6 +60,7 @@ module wb_stream_writer_tb;
    wire [WB_DW-1:0]    stream_data;
    wire 	       stream_valid;
    wire 	       stream_ready;
+   wire 	       irq;
 
    wb_stream_writer
      #(.FIFO_AW (FIFO_AW),
@@ -84,6 +85,7 @@ module wb_stream_writer_tb;
       .stream_m_data_o  (stream_data),
       .stream_m_valid_o (stream_valid),
       .stream_m_ready_i (stream_ready),
+      .stream_m_irq_o   (irq),
       .wbs_adr_i (wb_m2s_cfg_adr),
       .wbs_dat_i (wb_m2s_cfg_dat),
       .wbs_sel_i (wb_m2s_cfg_sel),
@@ -199,8 +201,14 @@ module wb_stream_writer_tb;
 
 	 @(posedge clk);
 	
-	 //Strobe enable signal
+	 //Enable stream writer
 	 wb_write(REG_ENABLE, 1);
+
+	 //Wait for interrupt
+	 @(posedge irq);
+
+	 //Clear interrupt
+	 wb_write(REG_ENABLE, 2);
 
 	 //Start receive transactor
 	 fifo_read(received, buf_size/WSB);
