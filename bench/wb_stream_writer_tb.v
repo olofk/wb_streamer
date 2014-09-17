@@ -159,7 +159,8 @@ module wb_stream_writer_tb;
       @(negedge rst);
       @(posedge clk);
 
-      //fifo_writer0.rate = 0.1;
+      //fifo_reader0.rate = 0.08;
+      //fifo_reader0.timeout = 1000000;
 
       //Initialize memory
       init_mem();
@@ -201,17 +202,21 @@ module wb_stream_writer_tb;
 
 	 @(posedge clk);
 	
-	 //Enable stream writer
-	 wb_write(REG_ENABLE, 1);
+	 fork
+	    begin
+	       //Enable stream writer
+	       wb_write(REG_ENABLE, 1);
+	       //Wait for interrupt
+	       @(posedge irq);
+	       //Clear interrupt
+	       wb_write(REG_ENABLE, 2);
+	    end
+	    begin
+	       //Start receive transactor
+	       fifo_read(received, buf_size/WSB);
+	    end
+	 join
 
-	 //Wait for interrupt
-	 @(posedge irq);
-
-	 //Clear interrupt
-	 wb_write(REG_ENABLE, 2);
-
-	 //Start receive transactor
-	 fifo_read(received, buf_size/WSB);
 	 
 	 verify(received, buf_size/WSB, start_addr);
       end
