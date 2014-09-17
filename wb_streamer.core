@@ -20,6 +20,7 @@ tb_private_src_files =
 
 [plusargs]
 verbose = bool Enable debug printouts in test bench
+transactions = int Number of test bench transactions
 
 [simulator]
 toplevel=wb_stream_writer_tb
