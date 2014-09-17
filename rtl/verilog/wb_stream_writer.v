@@ -39,7 +39,7 @@ module wb_stream_writer
 
    //FIFO interface
    wire [WB_DW-1:0] 	 fifo_din;
-   wire [FIFO_AW-1:0] 	 fifo_cnt;
+   wire [FIFO_AW:0] 	 fifo_cnt;
    wire 		 fifo_rd;
    wire 		 fifo_wr;
    wire 		 fifo_empty;

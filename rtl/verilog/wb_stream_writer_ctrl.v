@@ -21,7 +21,7 @@ module wb_stream_writer_ctrl
    //FIFO interface
    output [WB_DW-1:0]   fifo_d,
    output 		    fifo_wr,
-   input [FIFO_AW-1:0] 	    fifo_cnt,
+   input [FIFO_AW:0] 	    fifo_cnt,
    //Configuration interface
    output reg		    busy,
    input 		    enable,
