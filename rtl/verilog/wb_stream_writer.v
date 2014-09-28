@@ -46,6 +46,7 @@ module wb_stream_writer
 
    //Configuration parameters
    wire 		 enable;
+   wire [WB_DW-1:0] 	 tx_cnt;
    wire [WB_AW-1:0] 	 start_adr; 
    wire [WB_AW-1:0] 	 buf_size;
    wire [WB_AW-1:0] 	 burst_size;
@@ -82,6 +83,7 @@ module wb_stream_writer
       .start_adr  (start_adr),
       .buf_size   (buf_size),
       .burst_size (burst_size),
+      .tx_cnt     (tx_cnt),
       .busy       (busy),
       .enable     (enable));
 
@@ -108,6 +110,7 @@ module wb_stream_writer
       .irq       (stream_m_irq_o),
       .busy      (busy),
       .enable    (enable),
+      .tx_cnt    (tx_cnt),
       .start_adr (start_adr),
       .buf_size  (buf_size),
       .burst_size (burst_size));

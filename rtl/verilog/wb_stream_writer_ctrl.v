@@ -25,6 +25,7 @@ module wb_stream_writer_ctrl
    //Configuration interface
    output reg		    busy,
    input 		    enable,
+   output reg [WB_DW-1:0]   tx_cnt,
    input [WB_AW-1:0] 	    start_adr,
    input [WB_AW-1:0] 	    buf_size,
    input [WB_AW-1:0] 	    burst_size);
@@ -34,7 +35,6 @@ module wb_stream_writer_ctrl
    
    initial if(FIFO_AW == 0) $error("%m : Error: FIFO_AW must be > 0");
 
-   reg [WB_AW-1:0] 	    adr;
    wire			    active;
 
    wire 		    timeout = 1'b0;
@@ -67,16 +67,16 @@ module wb_stream_writer_ctrl
    assign wbm_stb_o = active;
    assign wbm_bte_o = 2'b00;
    assign wbm_dat_o = {WB_DW{1'b0}};
-   assign wbm_adr_o = start_adr + adr*4;
+   assign wbm_adr_o = start_adr + tx_cnt*4;
 
    always @(posedge wb_clk_i) begin
       //Address generation
-      last_adr = (adr == buf_size[WB_AW-1:2]-1);
+      last_adr = (tx_cnt == buf_size[WB_AW-1:2]-1);
       if (wbm_ack_i) begin
 	 if (last_adr)
-	   adr <= 0;
+	   tx_cnt <= 0;
 	 else
-	   adr <= adr+1;
+	   tx_cnt <= tx_cnt+1;
       end
 
       //Burst counter
@@ -108,7 +108,7 @@ module wb_stream_writer_ctrl
       
       if(wb_rst_i) begin
 	 state <= S_IDLE;
-	 adr <= 0;
+	 tx_cnt <= 0;
 	 busy <= 1'b0;
       end
    end

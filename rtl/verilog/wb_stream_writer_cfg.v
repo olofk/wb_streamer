@@ -21,6 +21,7 @@ module wb_stream_writer_cfg
    output reg 		  irq,
    input 		  busy,
    output reg 		  enable,
+   input [WB_DW-1:0] 	  tx_cnt,
    output reg [WB_AW-1:0] start_adr,
    output reg [WB_AW-1:0] buf_size,
    output reg [WB_AW-1:0] burst_size);
@@ -40,7 +41,10 @@ module wb_stream_writer_cfg
        busy_r <= busy;
 
    // Read
-   assign wb_dat_o = wb_adr_i[5:2] == 0 ? {{(WB_DW-2){1'b0}}, irq, busy} : 0;
+   assign wb_dat_o = wb_adr_i[5:2] == 0 ? {{(WB_DW-2){1'b0}}, irq, busy} :
+                     wb_adr_i[5:2] == 2 ? buf_size :
+                     wb_adr_i[5:2] == 4 ? tx_cnt*4 :
+                     0;
 
    always @(posedge wb_clk_i) begin
       // Ack generation
