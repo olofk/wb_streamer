@@ -1,7 +1,7 @@
 CAPI=1
 [main]
 description = Wishbone streamer
-depend = fifo
+depend = fifo stream_utils
 simulators = icarus modelsim
 
 [verilog]
@@ -11,6 +11,7 @@ src_files =
  rtl/verilog/wb_stream_reader.v
  rtl/verilog/wb_stream_writer_cfg.v
  rtl/verilog/wb_stream_writer_ctrl.v
+ rtl/verilog/wb_stream_writer_fifo.v
  rtl/verilog/wb_stream_writer.v
  
 tb_private_src_files =

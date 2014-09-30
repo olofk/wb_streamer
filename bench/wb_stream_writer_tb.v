@@ -99,14 +99,14 @@ module wb_stream_writer_tb;
       .wbs_err_o (wb_s2m_cfg_err),
       .wbs_rty_o (wb_s2m_cfg_rty));
 
-   fifo_fwft_reader
+   stream_reader
      #(.WIDTH (WB_DW),
        .MAX_BLOCK_SIZE (MAX_BUF_SIZE/WSB))
-   fifo_reader0
-     (.clk   (clk),
-      .din   (stream_data),
-      .rden  (stream_ready),
-      .empty (!stream_valid));
+   stream_reader0
+     (.clk              (clk),
+      .stream_s_data_i  (stream_data),
+      .stream_s_valid_i (stream_valid),
+      .stream_s_ready_o (stream_ready));
 
    wb_bfm_memory
      #(.mem_size_bytes(MEM_SIZE),
@@ -159,7 +159,7 @@ module wb_stream_writer_tb;
       @(negedge rst);
       @(posedge clk);
 
-      //fifo_reader0.rate = 0.08;
+      //stream_reader0.rate = 0.08;
       //fifo_reader0.timeout = 1000000;
 
       //Initialize memory
@@ -239,7 +239,7 @@ module wb_stream_writer_tb;
       input integer 			     length_i;
       
       begin
-	 fifo_reader0.read_block(data_o, length_i);
+	 stream_reader0.read_block(data_o, length_i);
       end
    endtask
 

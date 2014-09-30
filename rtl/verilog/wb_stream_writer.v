@@ -42,7 +42,6 @@ module wb_stream_writer
    wire [FIFO_AW:0] 	 fifo_cnt;
    wire 		 fifo_rd;
    wire 		 fifo_wr;
-   wire 		 fifo_empty;
 
    //Configuration parameters
    wire 		 enable;
@@ -50,9 +49,6 @@ module wb_stream_writer
    wire [WB_AW-1:0] 	 start_adr; 
    wire [WB_AW-1:0] 	 buf_size;
    wire [WB_AW-1:0] 	 burst_size;
-   
-   assign stream_m_valid_o = !fifo_empty;
-   assign fifo_rd = stream_m_valid_o & stream_m_ready_i;
    
    wb_stream_writer_ctrl
      #(.WB_AW (WB_AW),
@@ -115,20 +111,20 @@ module wb_stream_writer
       .buf_size  (buf_size),
       .burst_size (burst_size));
    
-   fifo_fwft
-     #(.DATA_WIDTH (WB_DW),
-       .DEPTH_WIDTH (FIFO_AW))
+   wb_stream_writer_fifo
+     #(.DW (WB_DW),
+       .AW (FIFO_AW))
    fifo0
    (.clk   (clk),
     .rst   (rst),
 
-    .din   (fifo_din),
-    .wr_en (fifo_wr),
-    .full  (fifo_full),
+    .stream_s_data_i  (fifo_din),
+    .stream_s_valid_i (fifo_wr),
+    .stream_s_ready_o (),
     
-    .dout  (stream_m_data_o),
-    .rd_en (fifo_rd),
-    .empty (fifo_empty),
+    .stream_m_data_o  (stream_m_data_o),
+    .stream_m_valid_o (stream_m_valid_o),
+    .stream_m_ready_i (stream_m_ready_i),
 
     .cnt   (fifo_cnt));
 
