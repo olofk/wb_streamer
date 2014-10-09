@@ -42,7 +42,9 @@ module wb_stream_writer_cfg
 
    // Read
    assign wb_dat_o = wb_adr_i[5:2] == 0 ? {{(WB_DW-2){1'b0}}, irq, busy} :
+		     wb_adr_i[5:2] == 1 ? start_adr :
                      wb_adr_i[5:2] == 2 ? buf_size :
+                     wb_adr_i[5:2] == 3 ? burst_size :
                      wb_adr_i[5:2] == 4 ? tx_cnt*4 :
                      0;
 
@@ -56,7 +58,7 @@ module wb_stream_writer_cfg
       //Read/Write logic
       enable <= 0;
       if (wb_stb_i & wb_cyc_i & wb_we_i & wb_ack_o) begin
-	 case (wb_adr_i[31:2])
+	 case (wb_adr_i[5:2])
 	   0 : begin
 	      if (wb_dat_i[0]) enable <= 1;
 	      if (wb_dat_i[1]) irq <= 0;
