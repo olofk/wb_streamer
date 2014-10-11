@@ -53,8 +53,8 @@ module wb_stream_writer_fifo
 
    
    always @(posedge clk) begin
-      inc_cnt = stream_s_valid_i & !full;
-      dec_cnt = fifo_rd_en & !fifo_empty;
+      inc_cnt = stream_s_valid_i & stream_s_ready_o;
+      dec_cnt = stream_m_valid_o & stream_m_ready_i;
 
       if(inc_cnt & !dec_cnt)
 	cnt <= cnt + 1;
