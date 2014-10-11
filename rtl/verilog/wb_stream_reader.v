@@ -18,11 +18,11 @@ module wb_stream_reader
     input 		 wbm_ack_i,
     input 		 wbm_err_i,
     input 		 wbm_rty_i,
-   //FIFO interface
+    //FIFO interface
     input [WB_DW-1:0] 	 stream_s_data_i,
     input 		 stream_s_valid_i,
     output 		 stream_s_ready_o,
-   //Configuration interface
+    //Configuration interface
     input [WB_AW-1:0] 	 wbs_adr_i,
     input [WB_DW-1:0] 	 wbs_dat_i,
     input [WB_DW/8-1:0]  wbs_sel_i,
@@ -39,9 +39,8 @@ module wb_stream_reader
 
    //FIFO interface
    wire [WB_DW-1:0] 	 fifo_dout;
-   wire [FIFO_AW-1:0] 	 fifo_cnt;
+   wire [FIFO_AW:0] 	 fifo_cnt;
    wire 		 fifo_rd;
-   wire 		 fifo_full;
 
    //Configuration parameters
    wire 		 enable;
@@ -55,7 +54,7 @@ module wb_stream_reader
        .WB_DW (WB_DW),
        .FIFO_AW (FIFO_AW),
        .MAX_BURST_LEN (MAX_BURST_LEN))
-   wb_stream_ctrl0
+   ctrl
      (.wb_clk_i    (clk),
       .wb_rst_i    (rst),
       //Stream data output
@@ -73,7 +72,7 @@ module wb_stream_reader
       .wbm_rty_i (wbm_rty_i),
       //FIFO interface
       .fifo_d   (fifo_dout),
-      .fifo_dv  (!fifo_empty),
+      .fifo_dv  (fifo_valid),
       .fifo_cnt (fifo_cnt),
       .fifo_rd  (fifo_rd),
       //Configuration interface
@@ -85,7 +84,7 @@ module wb_stream_reader
    wb_stream_cfg
      #(.WB_AW (WB_AW),
        .WB_DW (WB_DW))
-   wb_stream_cfg0
+   cfg
      (.wb_clk_i  (clk),
       .wb_rst_i  (rst),
       //Wishbone IF
@@ -107,20 +106,19 @@ module wb_stream_reader
       .buf_size  (buf_size),
       .burst_size (burst_size));
 
-   assign stream_ready_o = !fifo_full;
-   
-   fifo_fwft
-     #(.DATA_WIDTH (WB_DW),
-       .DEPTH_WIDTH (FIFO_AW))
-   fifo0
+   wb_stream_writer_fifo
+     #(.DW (WB_DW),
+       .AW (FIFO_AW))
+   fifo
    (.clk (clk),
     .rst (rst),
-    .din (stream_data_i),
-    .wr_en (stream_valid_i),
-    .full (fifo_full),
-    .dout (fifo_dout),
-    .rd_en (fifo_rd),
-    .empty (fifo_empty),
+    .stream_s_data_i  (stream_s_data_i),
+    .stream_s_valid_i (stream_s_valid_i),
+    .stream_s_ready_o (stream_s_ready_o),
+
+    .stream_m_data_o  (fifo_dout),
+    .stream_m_valid_o (fifo_valid),
+    .stream_m_ready_i (fifo_rd),
     .cnt  (fifo_cnt));
 
 endmodule

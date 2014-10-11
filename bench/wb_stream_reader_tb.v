@@ -1,4 +1,4 @@
-module wb_streamer_tb;
+module wb_stream_reader_tb;
 
    localparam FIFO_MAX_BLOCK_SIZE = 8;
    localparam FIFO_AW = 5;
@@ -34,15 +34,15 @@ module wb_streamer_tb;
    wire 	    wb_s2m_ctrl_rx_ack;
    wire 	    wb_s2m_ctrl_rx_err;
    wire 	    wb_s2m_ctrl_rx_rty;
-   //FIFO interface
-   wire [WB_DW-1:0] fifo_d;
-   wire 	    fifo_wr;
-   wire 	    fifo_full;
+   //Stream interface
+   wire [WB_DW-1:0] stream_data;
+   wire 	    stream_valid;
+   wire 	    stream_ready;
    
    wb_stream_reader
      #(.FIFO_AW (FIFO_AW),
        .MAX_BURST_LEN (MAX_BURST_LEN))
-   wb_stream_reader0
+   dut
      (.clk       (clk),
       .rst       (rst),
       //Stream data output
@@ -59,18 +59,18 @@ module wb_streamer_tb;
       .wbm_err_i (wb_s2m_ctrl_rx_err),
       .wbm_rty_i (wb_s2m_ctrl_rx_rty),
       //FIFO interface
-      .stream_data (fifo_d),
-      .stream_dv   (fifo_wr),
-      .stream_halt (fifo_full));
+      .stream_s_data_i  (stream_data),
+      .stream_s_valid_i (stream_valid),
+      .stream_s_ready_o (stream_ready));
 
-   fifo_writer
+   stream_writer
      #(.WIDTH (WB_DW),
        .MAX_BLOCK_SIZE (FIFO_MAX_BLOCK_SIZE))
-   fifo_writer0
+   writer
      (.clk (clk),
-      .dout (fifo_d),
-      .wren (fifo_wr),
-      .full (fifo_full));
+      .stream_m_data_o  (stream_data),
+      .stream_m_valid_o (stream_valid),
+      .stream_m_ready_i (stream_ready));
 
    wb_reader
      #(.WB_AW (WB_AW),
@@ -102,11 +102,11 @@ module wb_streamer_tb;
       start_adr = 0;
       
       //FIXME: Implement wb slave config IF
-      wb_stream_reader0.wb_stream_cfg0.buf_size = BUF_SIZE;
-      wb_stream_reader0.wb_stream_cfg0.burst_size = BURST_SIZE;
-      wb_stream_reader0.wb_stream_cfg0.start_adr = start_adr;
+      dut.cfg.buf_size = BUF_SIZE;
+      dut.cfg.burst_size = BURST_SIZE;
+      dut.cfg.start_adr = start_adr;
       
-      fifo_writer0.rate = 0.1;
+      writer.rate = 0.1;
       
       for(i=0 ; i < 4 ; i=i+1) begin
 	 test_main(start_adr);
@@ -147,7 +147,7 @@ module wb_streamer_tb;
       
       
       begin
-	 fifo_writer0.write_block(data_i, length_i);
+	 writer.write_block(data_i, length_i);
 	 $display("Done sending %0d words to DUT", length_i);
       end
    endtask

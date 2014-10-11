@@ -23,7 +23,7 @@ module wb_stream_ctrl
    //FIFO interface
    input [WB_DW-1:0] 	    fifo_d,
    input 		    fifo_dv,
-   input [FIFO_AW-1:0] 	    fifo_cnt,
+   input [FIFO_AW:0] 	    fifo_cnt,
    output reg 		    fifo_rd,
    //Configuration interface
    input 		    enable,
