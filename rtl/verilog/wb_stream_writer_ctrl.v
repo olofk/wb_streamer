@@ -4,41 +4,37 @@ module wb_stream_writer_ctrl
     parameter FIFO_AW = 0,
     parameter MAX_BURST_LEN = 0)
   (//Stream data output
-   input 		    wb_clk_i,
-   input 		    wb_rst_i,
-   output [WB_AW-1:0] 	    wbm_adr_o,
-   output [WB_DW-1:0] 	    wbm_dat_o,
-   output [WB_DW/8-1:0]	    wbm_sel_o,
-   output 		    wbm_we_o ,
-   output 		    wbm_cyc_o,
-   output 		    wbm_stb_o,
-   output reg [2:0] 	    wbm_cti_o,
-   output [1:0] 	    wbm_bte_o,
-   input [WB_DW-1:0] 	    wbm_dat_i,
-   input 		    wbm_ack_i,
-   input 		    wbm_err_i,
-   input 		    wbm_rty_i,
+   input 		  wb_clk_i,
+   input 		  wb_rst_i,
+   output [WB_AW-1:0] 	  wbm_adr_o,
+   output [WB_DW-1:0] 	  wbm_dat_o,
+   output [WB_DW/8-1:0]   wbm_sel_o,
+   output 		  wbm_we_o ,
+   output 		  wbm_cyc_o,
+   output 		  wbm_stb_o,
+   output reg [2:0] 	  wbm_cti_o,
+   output [1:0] 	  wbm_bte_o,
+   input [WB_DW-1:0] 	  wbm_dat_i,
+   input 		  wbm_ack_i,
+   input 		  wbm_err_i,
+   input 		  wbm_rty_i,
    //FIFO interface
-   output [WB_DW-1:0]   fifo_d,
-   output 		    fifo_wr,
-   input [FIFO_AW:0] 	    fifo_cnt,
+   output [WB_DW-1:0] 	  fifo_d,
+   output 		  fifo_wr,
+   input [FIFO_AW:0] 	  fifo_cnt,
    //Configuration interface
-   output reg		    busy,
-   input 		    enable,
-   output reg [WB_DW-1:0]   tx_cnt,
-   input [WB_AW-1:0] 	    start_adr,
-   input [WB_AW-1:0] 	    buf_size,
-   input [WB_AW-1:0] 	    burst_size);
-   
-   
-//`include "wb_bfm_params.v"
-   
+   output reg 		  busy,
+   input 		  enable,
+   output reg [WB_DW-1:0] tx_cnt,
+   input [WB_AW-1:0] 	  start_adr,
+   input [WB_AW-1:0] 	  buf_size,
+   input [WB_AW-1:0] 	  burst_size);
+
    initial if(FIFO_AW == 0) $error("%m : Error: FIFO_AW must be > 0");
 
    wire			    active;
 
    wire 		    timeout = 1'b0;
-   reg 			    const_burst;
    reg 			    last_adr;
    reg [$clog2(MAX_BURST_LEN-1):0] burst_cnt;
 
@@ -48,10 +44,10 @@ module wb_stream_writer_ctrl
    
    reg [1:0] 			      state;
 
-
    wire 			      burst_end = (burst_cnt == burst_size-1);
+   wire fifo_ready = (fifo_cnt+burst_size <= 2**FIFO_AW);
 
-   always @(active or burst_end or const_burst) begin
+   always @(active or burst_end) begin
       wbm_cti_o = !active     ? 3'b000 :
 		  burst_end   ? 3'b111 :
 		  3'b010; //LINEAR_BURST;
@@ -72,12 +68,11 @@ module wb_stream_writer_ctrl
    always @(posedge wb_clk_i) begin
       //Address generation
       last_adr = (tx_cnt == buf_size[WB_AW-1:2]-1);
-      if (wbm_ack_i) begin
+      if (wbm_ack_i)
 	 if (last_adr)
 	   tx_cnt <= 0;
 	 else
 	   tx_cnt <= tx_cnt+1;
-      end
 
       //Burst counter
       if(!active)
@@ -89,7 +84,7 @@ module wb_stream_writer_ctrl
       //FSM
       case (state)
 	S_IDLE : begin
-	   if (busy & (fifo_cnt+burst_size <= 2**FIFO_AW))
+	   if (busy & fifo_ready)
 	     state <= S_ACTIVE;
 	   if (enable)
 	     busy <= 1'b1;

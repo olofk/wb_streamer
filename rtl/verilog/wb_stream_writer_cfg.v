@@ -26,13 +26,6 @@ module wb_stream_writer_cfg
    output reg [WB_AW-1:0] buf_size,
    output reg [WB_AW-1:0] burst_size);
 
-/*   initial begin
-      enable = 1'b0;
-      start_adr = 0; 
-      buf_size  = 8;//FIXME
-      burst_size = 4; //FIXME
-   end*/
-
    reg 			  busy_r;
    always @(posedge wb_clk_i)
      if (wb_rst_i)

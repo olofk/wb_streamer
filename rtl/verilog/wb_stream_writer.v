@@ -55,7 +55,7 @@ module wb_stream_writer
        .WB_DW (WB_DW),
        .FIFO_AW (FIFO_AW),
        .MAX_BURST_LEN (MAX_BURST_LEN))
-   wb_stream_writer_ctrl0
+   ctrl
      (.wb_clk_i    (clk),
       .wb_rst_i    (rst),
       //Stream data output
@@ -76,12 +76,12 @@ module wb_stream_writer
       .fifo_wr   (fifo_wr),
       .fifo_cnt  (fifo_cnt),
       //Configuration interface
+      .busy       (busy),
+      .enable     (enable),
+      .tx_cnt     (tx_cnt),
       .start_adr  (start_adr),
       .buf_size   (buf_size),
-      .burst_size (burst_size),
-      .tx_cnt     (tx_cnt),
-      .busy       (busy),
-      .enable     (enable));
+      .burst_size (burst_size));
 
    wb_stream_writer_cfg
      #(.WB_AW (WB_AW),
@@ -110,7 +110,7 @@ module wb_stream_writer
       .start_adr (start_adr),
       .buf_size  (buf_size),
       .burst_size (burst_size));
-   
+
    wb_stream_writer_fifo
      #(.DW (WB_DW),
        .AW (FIFO_AW))
@@ -121,7 +121,7 @@ module wb_stream_writer
     .stream_s_data_i  (fifo_din),
     .stream_s_valid_i (fifo_wr),
     .stream_s_ready_o (),
-    
+
     .stream_m_data_o  (stream_m_data_o),
     .stream_m_valid_o (stream_m_valid_o),
     .stream_m_ready_i (stream_m_ready_i),

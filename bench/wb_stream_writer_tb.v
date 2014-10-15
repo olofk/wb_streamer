@@ -8,13 +8,13 @@ module wb_stream_writer_tb;
    localparam WB_DW = 32;
    localparam WSB = WB_DW/8; //Word size in bytes
    
-   localparam MEM_SIZE = 512; //Memory size in bytes
-   
+   localparam MEM_SIZE = 128*WSB; //Memory size in bytes
+
    localparam MAX_BUF_SIZE = 128; //Buffer size in bytes
    localparam BURST_SIZE = 8;
 
    //Configuration registers
-   localparam REG_ENABLE     = 0*WSB;
+   localparam REG_CSR        = 0*WSB;
    localparam REG_START_ADDR = 1*WSB;
    localparam REG_BUF_SIZE   = 2*WSB;
    localparam REG_BURST_SIZE = 3*WSB;
@@ -27,7 +27,7 @@ module wb_stream_writer_tb;
 
    vlog_tb_utils vlog_tb_utils0();
    vlog_functions utils();
-   
+
    //Wishbone memory interface
    wire [WB_AW-1:0]    wb_m2s_data_adr;
    wire [WB_DW-1:0]    wb_m2s_data_dat;
@@ -57,15 +57,15 @@ module wb_stream_writer_tb;
    wire 	       wb_s2m_cfg_rty;
 
    //Stream interface
-   wire [WB_DW-1:0]    stream_data;
-   wire 	       stream_valid;
-   wire 	       stream_ready;
-   wire 	       irq;
+   wire [WB_DW-1:0] stream_data;
+   wire 	    stream_valid;
+   wire 	    stream_ready;
+   wire 	    irq;
 
    wb_stream_writer
      #(.FIFO_AW (FIFO_AW),
        .MAX_BURST_LEN (MAX_BURST_LEN))
-   wb_stream_writer0
+   dut
      (.clk       (clk),
       .rst       (rst),
       //Stream data output
@@ -86,6 +86,7 @@ module wb_stream_writer_tb;
       .stream_m_valid_o (stream_valid),
       .stream_m_ready_i (stream_ready),
       .stream_m_irq_o   (irq),
+      //Control Interface
       .wbs_adr_i (wb_m2s_cfg_adr),
       .wbs_dat_i (wb_m2s_cfg_dat),
       .wbs_sel_i (wb_m2s_cfg_sel),
