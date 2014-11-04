@@ -1,7 +1,7 @@
 CAPI=1
 [main]
 description = Wishbone streamer
-depend = fifo stream_utils
+depend = stream_utils-1.0
 simulators = icarus modelsim
 
 [verilog]
