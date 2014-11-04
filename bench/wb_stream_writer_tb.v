@@ -206,11 +206,11 @@ module wb_stream_writer_tb;
 	 fork
 	    begin
 	       //Enable stream writer
-	       wb_write(REG_ENABLE, 1);
+	       wb_write(REG_CSR, 1);
 	       //Wait for interrupt
 	       @(posedge irq);
 	       //Clear interrupt
-	       wb_write(REG_ENABLE, 2);
+	       wb_write(REG_CSR, 2);
 	    end
 	    begin
 	       //Start receive transactor
