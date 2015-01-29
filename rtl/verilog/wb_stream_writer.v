@@ -49,6 +49,8 @@ module wb_stream_writer
    wire [WB_AW-1:0] 	 start_adr; 
    wire [WB_AW-1:0] 	 buf_size;
    wire [WB_AW-1:0] 	 burst_size;
+
+   wire 		 busy;
    
    wb_stream_writer_ctrl
      #(.WB_AW (WB_AW),

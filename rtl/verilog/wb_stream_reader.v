@@ -48,6 +48,8 @@ module wb_stream_reader
    wire [WB_AW-1:0] 	 start_adr; 
    wire [WB_AW-1:0] 	 buf_size;
    wire [WB_AW-1:0] 	 burst_size;
+
+   wire 		 busy;
    
    wb_stream_reader_ctrl
      #(.WB_AW (WB_AW),
@@ -122,7 +124,7 @@ module wb_stream_reader
     .stream_s_ready_o (stream_s_ready_o),
 
     .stream_m_data_o  (fifo_dout),
-    .stream_m_valid_o (fifo_valid),
+    .stream_m_valid_o (),
     .stream_m_ready_i (fifo_rd),
 
     .cnt   (fifo_cnt));
