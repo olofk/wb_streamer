@@ -18,8 +18,6 @@ module wb_reader
     output 		wb_err_o,
     output 		wb_rty_o,
     output [WB_DW-1:0] 	wb_dat_o);
-
-`include "wb_bfm_params.v"
    
    wb_bfm_slave
      #(.aw (WB_AW),

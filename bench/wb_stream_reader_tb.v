@@ -130,7 +130,7 @@ module wb_stream_reader_tb;
       .wb_err_o (wb_s2m_data_err));
 
    wb_bfm_master
-     #(.MAX_BURST_LENGTH (1)) 
+     #(.MAX_BURST_LEN (2))
    wb_cfg
      (.wb_clk_i (clk),
       .wb_rst_i (rst),
