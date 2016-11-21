@@ -35,7 +35,7 @@ module wb_stream_writer_fifo
        .rd_en_i   (fifo_rd_en),
        .rd_data_o (fifo_dout),
        .empty_o   (fifo_empty),
-       .wr_en_i   (stream_s_valid_i),
+       .wr_en_i   (stream_s_valid_i & ~full),
        .wr_data_i (stream_s_data_i),
        .full_o    (full));
 
