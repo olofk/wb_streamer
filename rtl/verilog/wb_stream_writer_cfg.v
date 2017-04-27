@@ -2,26 +2,26 @@ module wb_stream_writer_cfg
   #(parameter WB_AW = 32,
     parameter WB_DW = 32)
   (
-   input 		  wb_clk_i,
-   input 		  wb_rst_i,
+   input                  wb_clk_i,
+   input                  wb_rst_i,
    //Wishbone IF
-   input [WB_AW-1:0] 	  wb_adr_i,
-   input [WB_DW-1:0] 	  wb_dat_i,
-   input [WB_DW/8-1:0] 	  wb_sel_i,
-   input 		  wb_we_i ,
-   input 		  wb_cyc_i,
-   input 		  wb_stb_i,
-   input [2:0] 		  wb_cti_i,
-   input [1:0] 		  wb_bte_i,
-   output [WB_DW-1:0] 	  wb_dat_o,
-   output reg 		  wb_ack_o,
-   output 		  wb_err_o,
-   output 		  wb_rty_o,
+   input [4:0]            wb_adr_i,
+   input [WB_DW-1:0]      wb_dat_i,
+   input [WB_DW/8-1:0]    wb_sel_i,
+   input                  wb_we_i ,
+   input                  wb_cyc_i,
+   input                  wb_stb_i,
+   input [2:0]            wb_cti_i,
+   input [1:0]            wb_bte_i,
+   output [WB_DW-1:0]     wb_dat_o,
+   output reg             wb_ack_o,
+   output                 wb_err_o,
+   output                 wb_rty_o,
    //Application IF
-   output reg 		  irq,
-   input 		  busy,
-   output reg 		  enable,
-   input [WB_DW-1:0] 	  tx_cnt,
+   output reg             irq,
+   input                  busy,
+   output reg             enable,
+   input [WB_DW-1:0]      tx_cnt,
    output reg [WB_AW-1:0] start_adr,
    output reg [WB_AW-1:0] buf_size,
    output reg [WB_AW-1:0] burst_size);
@@ -34,11 +34,11 @@ module wb_stream_writer_cfg
        busy_r <= busy;
 
    // Read
-   assign wb_dat_o = wb_adr_i[5:2] == 0 ? {{(WB_DW-2){1'b0}}, irq, busy} :
-		     wb_adr_i[5:2] == 1 ? start_adr :
-                     wb_adr_i[5:2] == 2 ? buf_size :
-                     wb_adr_i[5:2] == 3 ? burst_size :
-                     wb_adr_i[5:2] == 4 ? tx_cnt*4 :
+   assign wb_dat_o = wb_adr_i[4:2] == 0 ? {{(WB_DW-2){1'b0}}, irq, busy} :
+		     wb_adr_i[4:2] == 1 ? start_adr :
+                     wb_adr_i[4:2] == 2 ? buf_size :
+                     wb_adr_i[4:2] == 3 ? burst_size :
+                     wb_adr_i[4:2] == 4 ? tx_cnt*4 :
                      0;
 
    always @(posedge wb_clk_i) begin
@@ -51,7 +51,7 @@ module wb_stream_writer_cfg
       //Read/Write logic
       enable <= 0;
       if (wb_stb_i & wb_cyc_i & wb_we_i & wb_ack_o) begin
-	 case (wb_adr_i[5:2])
+	 case (wb_adr_i[4:2])
 	   0 : begin
 	      if (wb_dat_i[0]) enable <= 1;
 	      if (wb_dat_i[1]) irq <= 0;
@@ -60,7 +60,7 @@ module wb_stream_writer_cfg
 	   2 : buf_size  <= wb_dat_i;
 	   3 : burst_size <= wb_dat_i;
 	   default : ;
-	 endcase // case (wb_adr_i[31:2])
+	 endcase
       end
 
       // irq logic, signal on falling edge of busy

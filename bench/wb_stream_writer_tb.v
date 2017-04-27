@@ -87,7 +87,7 @@ module wb_stream_writer_tb;
       .stream_m_ready_i (stream_ready),
       .stream_m_irq_o   (irq),
       //Control Interface
-      .wbs_adr_i (wb_m2s_cfg_adr),
+      .wbs_adr_i (wb_m2s_cfg_adr[4:0]),
       .wbs_dat_i (wb_m2s_cfg_dat),
       .wbs_sel_i (wb_m2s_cfg_sel),
       .wbs_we_i  (wb_m2s_cfg_we), 
