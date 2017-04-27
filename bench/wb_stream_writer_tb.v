@@ -27,6 +27,7 @@ module wb_stream_writer_tb;
 
    vlog_tb_utils vlog_tb_utils0();
    vlog_functions utils();
+   vlog_tap_generator #("wb_stream_writer_tb.tap", 1) tap();
 
    //Wishbone memory interface
    wire [WB_AW-1:0]    wb_m2s_data_adr;
@@ -169,6 +170,7 @@ module wb_stream_writer_tb;
 	 test_main();
 	 utils.progress_bar("Completed transaction", transaction, TRANSACTIONS);
       end
+      tap.ok("All done");
       $finish;
    end
 
