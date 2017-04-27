@@ -53,9 +53,9 @@ module wb_reader
 	 
 	 addr = wb_adr_i;
 	 
-	 if(bfm0.op !== WRITE)
+	 if(bfm0.op !== bfm0.WRITE)
 	   $error("%m : Expected a wishbone write operation");
-	 else if(bfm0.cycle_type !== BURST_CYCLE)
+	 else if(bfm0.cycle_type !== bfm0.BURST_CYCLE)
 	   $error("%m : Expected a burst cycle");
 	 else begin
 	    idx = 0;

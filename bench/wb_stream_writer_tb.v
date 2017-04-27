@@ -227,8 +227,10 @@ module wb_stream_writer_tb;
       reg 		err;
       begin
 	 wb_cfg.write(addr_i, data_i, 4'hf, err);
-	 if(err)
-	   $error("Error writing to config interface address 0x%8x", addr_i);
+	 if(err) begin
+	    $display("Error writing to config interface address 0x%8x", addr_i);
+            $finish;
+         end
       end
    endtask
    

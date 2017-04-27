@@ -31,8 +31,6 @@ module wb_stream_reader_ctrl
    input [WB_AW-1:0] 	  buf_size,
    input [WB_AW-1:0] 	  burst_size);
 
-   initial if(FIFO_AW == 0) $error("%m : Error: FIFO_AW must be > 0");
-
    wire			    active;
 
    wire 		    timeout = 1'b0;

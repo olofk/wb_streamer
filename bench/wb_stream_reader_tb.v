@@ -216,8 +216,10 @@ module wb_stream_reader_tb;
       reg 		err;
       begin
 	 wb_cfg.write(addr_i, data_i, 4'hf, err);
-	 if(err)
-	   $error("Error writing to config interface address 0x%8x", addr_i);
+	 if(err) begin
+	    $display("Error writing to config interface address 0x%8x", addr_i);
+            $finish;
+         end
       end
    endtask
 
@@ -248,11 +250,13 @@ module wb_stream_reader_tb;
 	    expected = stimuli[idx];
 	    received = wb_ram0.mem[start_adr/WSB+idx];
 	       
-	    if(received !== expected)
-	      $error("%m : Verify failed at address 0x%8x. Expected 0x%8x : Got 0x%8x",
-		     start_adr+idx*WSB,
-		     expected,
-		     received);
+	    if(received !== expected) begin
+	       $display("%m : Verify failed at address 0x%8x. Expected 0x%8x : Got 0x%8x",
+		        start_adr+idx*WSB,
+		        expected,
+		        received);
+               $finish;
+            end
 	 end
       end
    endtask
