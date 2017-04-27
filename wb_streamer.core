@@ -44,5 +44,9 @@ toplevel = wb_stream_writer_tb
 [icarus]
 depend = >=vlog_tb_utils-1.0 >=wb_bfm-1.0
 
+[isim]
+depend = >=vlog_tb_utils-1.0 >=wb_bfm-1.0
+isim_options = -d BROKEN_CLOG2
+
 [modelsim]
 depend = >=vlog_tb_utils-1.0 >=wb_bfm-1.0
