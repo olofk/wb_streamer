@@ -19,7 +19,6 @@ module wb_stream_reader_ctrl
    input [WB_DW-1:0] 	  wbm_dat_i,
    input 		  wbm_ack_i,
    input 		  wbm_err_i,
-   input 		  wbm_rty_i,
    //FIFO interface
    input [WB_DW-1:0] 	  fifo_d,
    output 		  fifo_rd,

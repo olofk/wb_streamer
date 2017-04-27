@@ -40,7 +40,6 @@ module wb_stream_writer_tb;
    wire [WB_DW-1:0]    wb_s2m_data_dat;
    wire 	       wb_s2m_data_ack;
    wire 	       wb_s2m_data_err;
-   wire 	       wb_s2m_data_rty;
 
    //Wishbone configuration interface
    wire [WB_AW-1:0]    wb_m2s_cfg_adr;
@@ -54,7 +53,6 @@ module wb_stream_writer_tb;
    wire [WB_DW-1:0]    wb_s2m_cfg_dat;
    wire 	       wb_s2m_cfg_ack;
    wire 	       wb_s2m_cfg_err;
-   wire 	       wb_s2m_cfg_rty;
 
    //Stream interface
    wire [WB_DW-1:0] stream_data;
@@ -80,7 +78,6 @@ module wb_stream_writer_tb;
       .wbm_dat_i (wb_s2m_data_dat),
       .wbm_ack_i (wb_s2m_data_ack),
       .wbm_err_i (wb_s2m_data_err),
-      .wbm_rty_i (wb_s2m_data_rty),
       //FIFO interface
       .stream_m_data_o  (stream_data),
       .stream_m_valid_o (stream_valid),
@@ -97,8 +94,7 @@ module wb_stream_writer_tb;
       .wbs_bte_i (wb_m2s_cfg_bte),
       .wbs_dat_o (wb_s2m_cfg_dat),
       .wbs_ack_o (wb_s2m_cfg_ack),
-      .wbs_err_o (wb_s2m_cfg_err),
-      .wbs_rty_o (wb_s2m_cfg_rty));
+      .wbs_err_o (wb_s2m_cfg_err));
 
    stream_reader
      #(.WIDTH (WB_DW),
@@ -127,7 +123,8 @@ module wb_stream_writer_tb;
       .wb_bte_i	(wb_m2s_data_bte),
       .wb_dat_o	(wb_s2m_data_dat),
       .wb_ack_o	(wb_s2m_data_ack),
-      .wb_err_o (wb_s2m_data_err));
+      .wb_err_o (wb_s2m_data_err),
+      .wb_rty_o ());
 
    wb_bfm_master
      #(.MAX_BURST_LEN (2))
@@ -145,7 +142,7 @@ module wb_stream_writer_tb;
       .wb_dat_i (wb_s2m_cfg_dat),
       .wb_ack_i (wb_s2m_cfg_ack),
       .wb_err_i (wb_s2m_cfg_err),
-      .wb_rty_i (wb_s2m_cfg_rty));
+      .wb_rty_i (1'b0));
 
    integer 	       transaction;
    integer 	       TRANSACTIONS;

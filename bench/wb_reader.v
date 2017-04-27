@@ -1,24 +1,24 @@
+`default_nettype none
 module wb_reader
   #(parameter WB_AW = 32,
     parameter WB_DW = 32,
     parameter MAX_BURST_LEN = 0)
-   (input 	   wb_clk_i,
-    input 		wb_rst_i,
-    
-    input [WB_AW-1:0] 	wb_adr_i,
-    input [WB_DW-1:0] 	wb_dat_i,
-    input [WB_DW/8-1:0] wb_sel_i,
-    input 		wb_we_i,
-    input [1:0] 	wb_bte_i,
-    input [2:0] 	wb_cti_i,
-    input 		wb_cyc_i,
-    input 		wb_stb_i,
-   
-    output 		wb_ack_o,
-    output 		wb_err_o,
-    output 		wb_rty_o,
-    output [WB_DW-1:0] 	wb_dat_o);
-   
+   (input wire               wb_clk_i,
+    input wire               wb_rst_i,
+
+    input wire [WB_AW-1:0]   wb_adr_i,
+    input wire [WB_DW-1:0]   wb_dat_i,
+    input wire [WB_DW/8-1:0] wb_sel_i,
+    input wire               wb_we_i,
+    input wire [1:0]         wb_bte_i,
+    input wire [2:0]         wb_cti_i,
+    input wire               wb_cyc_i,
+    input wire               wb_stb_i,
+
+    output wire              wb_ack_o,
+    output wire              wb_err_o,
+    output wire [WB_DW-1:0]  wb_dat_o);
+
    wb_bfm_slave
      #(.aw (WB_AW),
        .dw (WB_DW))
@@ -36,7 +36,7 @@ module wb_reader
       .wb_dat_o (wb_dat_o),
       .wb_ack_o (wb_ack_o),
       .wb_err_o (wb_err_o),
-      .wb_rty_o (wb_rty_o));
+      .wb_rty_o ());
    
    task wb_read_burst;
       output [MAX_BURST_LEN*WB_AW-1:0] addr_o;

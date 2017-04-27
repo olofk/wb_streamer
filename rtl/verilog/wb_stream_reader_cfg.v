@@ -16,7 +16,6 @@ module wb_stream_reader_cfg
    output [WB_DW-1:0]     wb_dat_o,
    output reg             wb_ack_o,
    output                 wb_err_o,
-   output                 wb_rty_o,
    //Application IF
    output reg             irq,
    input                  busy,
@@ -77,6 +76,5 @@ module wb_stream_reader_cfg
       end
    end
    assign wb_err_o = 0;
-   assign wb_rty_o = 0;
 
 endmodule

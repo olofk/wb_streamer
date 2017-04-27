@@ -17,7 +17,6 @@ module wb_stream_writer
     input [WB_DW-1:0]    wbm_dat_i,
     input                wbm_ack_i,
     input                wbm_err_i,
-    input                wbm_rty_i,
     //Stream interface
     output [WB_DW-1:0]   stream_m_data_o,
     output               stream_m_valid_o,
@@ -34,8 +33,7 @@ module wb_stream_writer
     input [1:0]          wbs_bte_i,
     output [WB_DW-1:0]   wbs_dat_o,
     output               wbs_ack_o,
-    output               wbs_err_o,
-    output               wbs_rty_o);
+    output               wbs_err_o);
 
    //FIFO interface
    wire [WB_DW-1:0] 	 fifo_din;
@@ -72,7 +70,6 @@ module wb_stream_writer
       .wbm_dat_i (wbm_dat_i),
       .wbm_ack_i (wbm_ack_i),
       .wbm_err_i (wbm_err_i),
-      .wbm_rty_i (wbm_rty_i),
       //FIFO interface
       .fifo_d    (fifo_din),
       .fifo_wr   (fifo_wr),
@@ -103,7 +100,6 @@ module wb_stream_writer
       .wb_dat_o (wbs_dat_o),
       .wb_ack_o (wbs_ack_o),
       .wb_err_o (wbs_err_o),
-      .wb_rty_o (wbs_rty_o),
       //Application IF
       .irq       (stream_m_irq_o),
       .busy      (busy),
